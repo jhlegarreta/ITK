@@ -17,11 +17,11 @@
  *=========================================================================*/
 
 #include "itkVectorContainerToListSampleAdaptor.h"
+#include "itkTestingMacros.h"
 
 int
 itkVectorContainerToListSampleAdaptorTest(int, char *[])
 {
-  std::cout << "VectorContainerToListSampleAdaptor Test \n \n";
 
   using VectorType = itk::Vector<double, 5>;
 
@@ -31,9 +31,38 @@ itkVectorContainerToListSampleAdaptorTest(int, char *[])
 
   AdaptorType::Pointer adaptor = AdaptorType::New();
 
+  ITK_EXERCISE_BASIC_OBJECT_METHODS(adaptor, VectorContainerToListSampleAdaptor, ListSample);
+
+
   ContainerType::Pointer container = ContainerType::New();
 
-  adaptor->SetVectorContainer(container);
+  // Test the exceptions
+  ITK_TRY_EXPECT_EXCEPTION(adaptor->Size());
 
+  typename AdaptorType::InstanceIdentifier instance = nullptr;
+  ITK_TRY_EXPECT_EXCEPTION(adaptor->GetMeasurementVector(instance));
+
+  ITK_TRY_EXPECT_EXCEPTION(adaptor->GetFrequency(instance));
+
+  ITK_TRY_EXPECT_EXCEPTION(adaptor->GetTotalFrequency());
+
+  // Set the vector container
+  adaptor->SetVectorContainer(container);
+  ITK_TEST_SET_GET_VALUE(container, adaptor->GetVectorContainer());
+
+  typename AdaptorType::InstanceIdentifier expectedSize = 1;
+  typename AdaptorType::InstanceIdentifier size = adaptor->Size();
+  ITK_TEST_EXPECT_EQUAL(expectedSize, size);
+
+  typename AdaptorType::AbsoluteFrequencyType expectedFreq = 1;
+  typename AdaptorType::AbsoluteFrequencyType freq = adaptor->GetFrequency(instance);
+  ITK_TEST_EXPECT_EQUAL(expectedFreq, freq);
+
+  typename AdaptorType::TotalAbsoluteFrequencyType expectedTotalFreq = 1;
+  typename AdaptorType::TotalAbsoluteFrequencyType totalFreq = adaptor->GetTotalFrequency();
+  ITK_TEST_EXPECT_EQUAL(expectedTotalFreq, totalFreq);
+
+
+  std::cout << "Test finished." << std::endl;
   return EXIT_SUCCESS;
 }

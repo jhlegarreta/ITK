@@ -20,6 +20,7 @@
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 #include "itkMetaImageIO.h"
+#include "itkTestingMacros.h"
 
 
 // Specific ImageIO test
@@ -29,7 +30,8 @@ itkMetaImageIOTest(int ac, char * av[])
 {
   if (ac < 3)
   {
-    std::cerr << "Usage: " << av[0] << " Input Output [ShouldFail]\n";
+    std::cerr << "Missing Parameters." << std::endl;
+    std::cerr << "Usage: " << itkNameOfTestExecutableMacro(av) << " Input Output [ShouldFail]" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -40,45 +42,42 @@ itkMetaImageIOTest(int ac, char * av[])
 
   itk::ImageFileReader<myImage>::Pointer reader = itk::ImageFileReader<myImage>::New();
 
-  // force use of MetaIO
+  // Force use of MetaIO
   using IOType = itk::MetaImageIO;
   IOType::Pointer metaIn = IOType::New();
+
+  ITK_EXERCISE_BASIC_OBJECT_METHODS(metaIn, MetaImageIO, ImageIOBase);
+
+
   metaIn->SetDoublePrecision(8); // Set manually for coverage
   reader->SetImageIO(metaIn);
 
-  // check usability of dimension (for coverage)
+  // Check usability of dimension (for coverage)
   if (!metaIn->SupportsDimension(3))
   {
     std::cerr << "Did not support dimension 3" << std::endl;
     return EXIT_FAILURE;
   }
 
-  // test subsampling factor (change it then change it back)
+  // Test subsampling factor (change it then change it back)
   unsigned int origSubSamplingFactor = metaIn->GetSubSamplingFactor();
   unsigned int subSamplingFactor = 2;
   metaIn->SetSubSamplingFactor(subSamplingFactor);
-  if (metaIn->GetSubSamplingFactor() != subSamplingFactor)
-  {
-    std::cerr << "Did not set/get Sub Sampling factor correctly" << std::endl;
-    return EXIT_FAILURE;
-  }
+  ITK_TEST_SET_GET_VALUE(subSamplingFactor, metaIn->GetSubSamplingFactor());
+
   metaIn->SetSubSamplingFactor(origSubSamplingFactor);
 
-  // read the file
+  // Read the file
   reader->SetFileName(av[1]);
-  try
+
+  if (ac == 3)
   {
-    reader->Update();
+    ITK_TRY_EXPECT_EXCEPTION(reader->Update());
+    return EXIT_SUCCESS;
   }
-  catch (const itk::ExceptionObject & e)
+  else
   {
-    std::cerr << "exception in file reader " << std::endl;
-    std::cerr << e << std::endl;
-    if (ac == 3) // should fail
-    {
-      return EXIT_SUCCESS;
-    }
-    return EXIT_FAILURE;
+    ITK_TRY_EXPECT_NO_EXCEPTION(reader->Update());
   }
 
   myImage::Pointer image = reader->GetOutput();
@@ -94,7 +93,10 @@ itkMetaImageIOTest(int ac, char * av[])
   writer->SetImageIO(metaOut);
   writer->SetInput(reader->GetOutput());
   writer->SetFileName(av[2]);
-  writer->Update();
 
+  ITK_TRY_EXPECT_NO_EXCEPTION(writer->Update());
+
+
+  std::cout << "Test finished." << std::endl;
   return EXIT_SUCCESS;
 }

@@ -28,53 +28,50 @@ itkLSMImageIOTest(int argc, char * argv[])
 {
   if (argc < 3)
   {
-    std::cerr << "Usage: " << itkNameOfTestExecutableMacro(argv) << " LSM.lsm OutputImage.lsm\n";
+    std::cerr << "Missing Parameters." << std::endl;
+    std::cerr << "Usage: " << itkNameOfTestExecutableMacro(argv) << " inputFileName(*.lsm) ouputFileName(*.lsm)"
+              << std::endl;
     return EXIT_FAILURE;
   }
 
+  const unsigned int Dimensions = 2;
+
   using InputPixelType = itk::RGBPixel<unsigned char>;
-  using InputImageType = itk::Image<InputPixelType, 2>;
+  using InputImageType = itk::Image<InputPixelType, Dimensions>;
   using ReaderType = itk::ImageFileReader<InputImageType>;
   using ImageIOType = itk::LSMImageIO;
 
-  const char * filename = argv[1];
-  const char * outfilename = argv[2];
-
   ReaderType::Pointer reader = ReaderType::New();
-  reader->SetFileName(filename);
+  const char *        inputFileName = argv[1];
+  reader->SetFileName(inputFileName);
 
   ImageIOType::Pointer lsmImageIO = ImageIOType::New();
+
+  EXERCISE_BASIC_OBJECT_METHODS(lsmImageIO, LSMImageIO, TIFFImageIO);
+
+
   reader->SetImageIO(lsmImageIO);
 
-  try
-  {
-    reader->Update();
-  }
-  catch (const itk::ExceptionObject & e)
-  {
-    std::cerr << "exception in file reader " << std::endl;
-    std::cerr << e << std::endl;
-    return EXIT_FAILURE;
-  }
+  ITK_TRY_EXPECT_NO_EXCEPTION(reader->Update());
 
-  //
+
+  void * buffer = nullptr;
+
+  lsmImageIO->Read(buffer);
+
+
+  lsmImageIO->SetFileName(outFileName);
+  lsmImageIO->Write(buffer);
+
   using WriterType = itk::ImageFileWriter<InputImageType>;
   WriterType::Pointer writer = WriterType::New();
-  writer->SetFileName(outfilename);
+  const char *        outFileName = argv[2];
+  writer->SetFileName(outFileName);
   writer->SetInput(reader->GetOutput());
 
-  try
-  {
-    writer->Update();
-  }
-  catch (const itk::ExceptionObject & e)
-  {
-    std::cerr << "exception in file writer " << std::endl;
-    std::cerr << e << std::endl;
-    return EXIT_FAILURE;
-  }
+  ITK_TRY_EXPECT_NO_EXCEPTION(writer->Update());
 
-  lsmImageIO->Print(std::cout);
 
+  std::cout << "Test finished." << std::endl;
   return EXIT_SUCCESS;
 }
