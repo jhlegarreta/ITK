@@ -18,6 +18,7 @@
 
 
 #include "itkTransformFileWriter.h"
+#include "itkTestingMacros.h"
 
 int
 itkTransformFileWriterTemplateTest(int argc, char * argv[])
@@ -37,6 +38,17 @@ itkTransformFileWriterTemplateTest(int argc, char * argv[])
   std::cout << "Writer class = " << transformWriter->GetNameOfClass() << "Writer base = "
             << dynamic_cast<TransformWriterType::Superclass *>(transformWriter.GetPointer())->GetNameOfClass()
             << std::endl;
+
+  auto appendMode = false;
+#if !defined(ITK_LEGACY_REMOVE)
+  transformWriter->SetAppendOn();
+  ITK_TEST_EXPECT_TRUE(transformWriter->GetAppendMode());
+
+  transformWriter->SetAppendOff();
+  ITK_TEST_EXPECT_TRUE(!transformWriter->GetAppendMode());
+#endif
+
+  ITK_SET_GET_BOOLEAN(transformWriter, AppendMode, appendMode);
 
   // trigger empty write exception
   ITK_TRY_EXPECT_EXCEPTION(transformWriter->Update());
