@@ -31,13 +31,10 @@ itkTransformFileWriterTemplateTest(int argc, char * argv[])
   }
 
   using TransformWriterType = itk::TransformFileWriterTemplate<double>;
-
-
   auto transformWriter = TransformWriterType::New();
 
-  std::cout << "Writer class = " << transformWriter->GetNameOfClass() << "Writer base = "
-            << dynamic_cast<TransformWriterType::Superclass *>(transformWriter.GetPointer())->GetNameOfClass()
-            << std::endl;
+  ITK_EXERCISE_BASIC_OBJECT_METHODS(transformWriter, TransformFileWriterTemplate, LightProcessObject);
+
 
   auto appendMode = false;
 #if !defined(ITK_LEGACY_REMOVE)
@@ -50,10 +47,16 @@ itkTransformFileWriterTemplateTest(int argc, char * argv[])
 
   ITK_SET_GET_BOOLEAN(transformWriter, AppendMode, appendMode);
 
+  auto useCompression = false;
+  ITK_SET_GET_BOOLEAN(transformWriter, UseCompression, useCompression);
+
   // trigger empty write exception
   ITK_TRY_EXPECT_EXCEPTION(transformWriter->Update());
 
-  transformWriter->SetFileName("transform.garbage");
+  const char* fileName = "transform.garbage";
+  transformWriter->SetFileName(fileName);
+  ITK_TEST_SET_GET_VALUE(fileName, transformWriter->GetFileName());
+
   // trigger exception for transformio not found
   ITK_TRY_EXPECT_EXCEPTION(transformWriter->Update());
 
