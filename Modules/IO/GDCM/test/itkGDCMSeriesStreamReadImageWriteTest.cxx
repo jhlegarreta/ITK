@@ -210,6 +210,9 @@ itkGDCMSeriesStreamReadImageWriteTest(int argc, char * argv[])
 
   ITK_TRY_EXPECT_NO_EXCEPTION(writer->Update());
 
+  auto fileNames = filenameGenerator->GetOutputFileNames();
+
+
 
   std::cout << "Test finished" << std::endl;
   return EXIT_SUCCESS;
